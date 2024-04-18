@@ -69,6 +69,7 @@ async function getPuzzleDataMongo(getLevel){
         if (!response.ok) {
         throw new Error('Network response was not ok');
         }
+        console.log("Conntected to MongoDB Succesfuly")
         return response.json();
     })
     .then(data => {
