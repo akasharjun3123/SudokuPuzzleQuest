@@ -1,1 +1,0 @@
-const {mainFunction}=require('../function')
