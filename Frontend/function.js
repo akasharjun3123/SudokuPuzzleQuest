@@ -63,7 +63,7 @@ function getDifficultyLevel(dbutns){
 
 async function getPuzzleDataMongo(getLevel){
     
-    apiUrl = `http://localhost:3000/api/data/${getLevel}`
+    apiUrl = `https://sudoku-puzzle-quest-server.onrender.com/api/data/${getLevel}`
     fetch(apiUrl)
     .then(response => {
         if (!response.ok) {
