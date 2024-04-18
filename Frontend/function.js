@@ -89,31 +89,6 @@ async function getPuzzleDataMongo(getLevel){
     
 }
 
-async function getPuzzleData(diffLevel){
-    fetch('https://raw.githubusercontent.com/akasharjun3123/Sudoku_Puzzles/main/akash.json').then(function(response){
-    return response.json();
-}).then(function(data){
-    const puzzlesData = data;
-    const currLevelData = puzzlesData[diffLevel]
-    let randomIndex = getIndex(currLevelData)
-    const unsolvedSudoku = currLevelData[randomIndex].unsolved
-    const solvedSudoku = currLevelData[randomIndex].solved
-    const copyArray = unsolvedSudoku.map(row => [...row])
-    console.log("This current puzzle data is of "+diffLevel+" Level with the index of "+randomIndex)
-    console.log("Unsolved Sudoku: ")
-    console.log(unsolvedSudoku)
-    console.log("Solved Sudoku: ")
-    console.log(solvedSudoku)
-    mainFunction(copyArray, unsolvedSudoku, solvedSudoku)
-
-    
-}).catch(function(error){
-    console.error("You are offline")
-    console.error(error);
-})
-}
-
-
 // Solver and Backtracking Functions:
 
 function manageBacktrack(unsolvedSudoku){
