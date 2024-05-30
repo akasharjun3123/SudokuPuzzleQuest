@@ -20,7 +20,10 @@ body {
 }
 
 
-
+#uploadForm{
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
 
 .upload-btn{
     display: flex;

@@ -1,12 +1,8 @@
-var numOfWrongInputs = 0                                            // COUNTER
 const sudokuGrid = document.querySelector(".sudoku-grid");          // SUDOKU GRID
-const dbutns = document.querySelectorAll(".btn");                   // DIFFICULTY BUTTONS
 const numPad = document.querySelectorAll(".num-pad")                // NUMPAD
-const counter = document.querySelector(".mistakes-counter-change"); // MISTAKES COUNTER
 const eraseButton = document.querySelector(".erase-cell");          // ERASE BUTTON
 const clearButton = document.querySelector(".clear-cell");          // CLEAR BUTTON
 const reset = document.querySelector(".reset-cell");                // RESET PUZZLE
-const set = document.querySelector(".set-cell");                    // RESET PUZZLE
 const solve = document.querySelector(".solve-cell");                // BACKTRACK SOLVING 
 const newGame = document.querySelector(".third-sub-grid");          // NEW GAME BUTTON
 const uploadImage = document.getElementById('uploadForm')           // IMAGE SUBMIT BUTTON
@@ -22,30 +18,53 @@ for(let row=0;row<9;row++){
 }
 
 const sudokuCells = document.querySelectorAll(".sudoku-cell")
+let PreUnSolvedSudoku = [];
+for (let i = 0; i < 9; i++) PreUnSolvedSudoku.push(Array(9).fill(0));
 
-getDifficultyLevel(dbutns)
+highlighitingCells(0,0)
+uploadImage.addEventListener('submit', function(event){
+    event.preventDefault();
+    const apiUrl = 'https://predict-digits.onrender.com/predict';   // URL of the Flask API endpoint
+    const formData = new FormData();                                // Create a new FormData object
+    const imageInput = document.getElementById('imageInput');       // Get the selected image file from the input field
+    const imageFile = imageInput.files[0];
+    formData.append('image', imageFile);                            // Append the image file to the FormData object
+    
+    fetch(apiUrl, {                                                 // Make a POST request to the Flask API endpoint with the FormData
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(jsonData => {
+        processPredictDigitJSON(jsonData, PreUnSolvedSudoku)  
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+})
 
 //Primary Event Handling:
-function mainFunction(unsolvedSudoku, originalUnsolvedSudoku, solvedSudoku){
+function mainProcess(unsolvedSudoku, originalPredictedSudoku){
 
     fillUnsolvedPuzzleData(unsolvedSudoku)
     highlighitingCells(0,0)
     sudokuCells.forEach(currCell=>{  
-        currCell.addEventListener("focus", function(event){
+        currCell.addEventListener('focus', function(){
             let rowNum = getRowColNumber(currCell.id).row
             let colNum = getRowColNumber(currCell.id).col
             highlighitingCells(rowNum, colNum)
             sameNumberHighlighting(this.textContent)
-              
         })
-        
-
         currCell.addEventListener("keydown", function(event){
+            
             if(event.key = "Backspace") manageBackSpace()
             const pressedKeyVal = parseInt(event.key)
             let rowNum = getRowColNumber(currCell.id).row
             let colNum = getRowColNumber(currCell.id).col
-            fillPressedKey(unsolvedSudoku,solvedSudoku, currCell, pressedKeyVal, rowNum, colNum)
+            fillPressedKey(unsolvedSudoku, currCell, pressedKeyVal, rowNum, colNum)
         })
     })
 
@@ -54,61 +73,32 @@ function mainFunction(unsolvedSudoku, originalUnsolvedSudoku, solvedSudoku){
             const currCell = document.querySelector(".focused-sudoku-cell")
             let rowNum = getRowColNumber(currCell.id).row
             let colNum = getRowColNumber(currCell.id).col
-            fillPressedKey(unsolvedSudoku, solvedSudoku, currCell, key.textContent, rowNum, colNum)
+            fillPressedKey(unsolvedSudoku, currCell, key.textContent, rowNum, colNum)
         })
 
     })
 
     eraseButton.addEventListener("click", manageBackSpace)
     clearButton.addEventListener("click",removeHighlighting)
-    reset.addEventListener("click", ()=> resetPuzzle(originalUnsolvedSudoku, unsolvedSudoku))
-    solve.addEventListener("click", () => manageBacktrack(unsolvedSudoku, solvedSudoku))
+    reset.addEventListener("click", ()=> resetPuzzle(originalPredictedSudoku, unsolvedSudoku))
+    solve.addEventListener("click", () => manageBacktrack(unsolvedSudoku))
     newGame.addEventListener("click", () => location.reload())
    
 }
 
 
-// JSON Extraction and Its Functions:
+// Digit Extraction and Its Functions:
 
-function getDifficultyLevel(dbutns){
-    dbutns.forEach(button =>{
-        button.addEventListener('click', function(){
-            const getLevel = button.textContent;
-            document.querySelector(".game-mode").classList.add("throw-model");
-            document.getElementById(getLevel).classList.add("active-lev");
-            getPuzzleDataMongo(getLevel)
-        })
-    })
+function processPredictDigitJSON(jsonData, PreUnSolvedSudoku){
+    const originalPredictedSudoku = [];
+    for (let i = 0; i < 9; i++) originalPredictedSudoku.push(jsonData.slice(i * 9, (i + 1) * 9));
+    for(let i=0;i<9;i++) for(let j = 0;j<9;j++) PreUnSolvedSudoku[i][j] = originalPredictedSudoku[i][j]
+    mainProcess(PreUnSolvedSudoku, originalPredictedSudoku)
+    console.log("Detected Digits: ")
+    console.log(PreUnSolvedSudoku);
 }
 
-async function getPuzzleDataMongo(getLevel){
-    
-    apiUrl = `https://sudoku-puzzle-quest-server.onrender.com/api/data/${getLevel}`
-    fetch(apiUrl)
-    .then(response => {
-        if (!response.ok) {
-        throw new Error('Network response was not ok');
-        }
-        console.log("Conntected to MongoDB Succesfuly")
-        return response.json();
-    })
-    .then(data => {
-        sudokuId = data._id
-        unsolvedSudoku =  data["unsolved"]
-        solvedSudoku =  data["solved"]
-        const copyArray = unsolvedSudoku.map(row => [...row])
-        console.log("This current puzzle data is of "+getLevel+" Level with ID of "+sudokuId)
-        console.log("Unsolved Sudoku: ")
-        console.log(unsolvedSudoku)
-        console.log("Solved Sudoku: ")
-        console.log(solvedSudoku)
-        mainFunction(copyArray, unsolvedSudoku, solvedSudoku)
-    })
-    .catch(error => {
-        console.error('Error fetching puzzle data:', error);
-    });
-    
-}
+
 
 // Solver and Backtracking Functions:
 
@@ -209,26 +199,14 @@ function fillUnsolvedPuzzleData(unsolvedSudoku){
     }
 }
 
-function fillPressedKey(unsolvedSudoku, solvedSudoku, currCell, pressedKeyVal, rowNum, colNum){
-    if(currCell.classList.contains("wrong-input")) currCell.classList.remove("wrong-input")
-    if(!currCell.classList.contains("filled-cell") && !currCell.classList.contains("fixed-cell")){
-        if(!isNaN(pressedKeyVal)){
-            currCell.innerHTML = pressedKeyVal
-            if(pressedKeyVal != solvedSudoku[rowNum][colNum]){
-                currCell.classList.add("wrong-input");
-                numOfWrongInputs += 1;
-                counter.textContent="Mistakes: "+numOfWrongInputs+"/5";
-                if(numOfWrongInputs == 5){
-                    location.reload();
-                }
-            }else{
-                unsolvedSudoku[rowNum][colNum] = pressedKeyVal;
-                currCell.classList.add("fixed-cell-color", "filled-cell")
-                currCell.classList.remove("empty-cell");
-                sameNumberHighlighting(pressedKeyVal)
-            }
-        }
-    }
+function fillPressedKey(unsolvedSudoku, currCell, pressedKeyVal, rowNum, colNum){
+    if(!isNaN(pressedKeyVal)){ 
+        currCell.innerHTML = pressedKeyVal      
+        unsolvedSudoku[rowNum][colNum] = pressedKeyVal;
+        currCell.classList.add("fixed-cell-color", "filled-cell")
+        currCell.classList.remove("empty-cell");
+        sameNumberHighlighting(pressedKeyVal)      
+    } 
 }
 
 function editCells(PreUnSolvedSudoku, currCell, pressedKeyVal, rowNum, colNum){
@@ -239,9 +217,7 @@ function editCells(PreUnSolvedSudoku, currCell, pressedKeyVal, rowNum, colNum){
     }
 }
 
-function resetPuzzle(originalUnsolvedSudoku, unsolvedSudoku){
-    numOfWrongInputs = 0;
-    counter.innerHTML="Mistakes: "+numOfWrongInputs+"/5";
+function resetPuzzle(originalPredictedSudoku, unsolvedSudoku){
     removeSameNumHigh()
     sudokuCells.forEach(cell =>{
         if(cell.classList.contains("filled-cell")) cell.classList.remove("filled-cell")
@@ -250,7 +226,7 @@ function resetPuzzle(originalUnsolvedSudoku, unsolvedSudoku){
 
         let rowNum = getRowColNumber(cell.id).row
         let colNum = getRowColNumber(cell.id).col
-        let currVal = originalUnsolvedSudoku[rowNum][colNum]
+        let currVal = originalPredictedSudoku[rowNum][colNum]
         unsolvedSudoku[rowNum][colNum] = currVal
         if(currVal != 0) {
             cell.classList.add("fixed-cell")
@@ -282,8 +258,7 @@ function getRowColNumber(cellID){
 
 function manageBackSpace(){
     const focusedCell = document.querySelector(".focused-sudoku-cell")
-    if(!focusedCell.classList.contains("filled-cell") && !focusedCell.classList.contains("fixed-cell")) focusedCell.innerHTML = "";
-    if(focusedCell.classList.contains("wrong-input")) focusedCell.classList.remove("wrong-input")
+    focusedCell.innerHTML = "";
 }
 
 
@@ -338,6 +313,12 @@ function removeSameNumHigh(){
     cells.forEach(cell =>{
         cell.classList.remove("same-num-high")
     })
+}
+
+function setUnsolvedSudoku(PreUnSolvedSudoku){
+    console.log("Modified Sudoku Digits")
+    console.log(PreUnSolvedSudoku)
+    fillUnsolvedPuzzleData(PreUnSolvedSudoku)
 }
 
 function printSudoku(sudoku) {
