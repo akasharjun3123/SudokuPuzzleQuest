@@ -85,25 +85,3 @@ async function getRandomDocument(collectionName) {
 
 
 
-async function getPuzzleDataMongo(getLevel){
-    
-    try{
-        await client.connect();
-        const randomDoc = await getRandomDocument(`${getLevel.toLowerCase()}-puzzle-collection`);
-        sudokuId = randomDoc._id
-        unsolvedSudoku =  randomDoc["unsolved"]
-        solvedSudoku =  randomDoc["solved"]
-        //const copyArray = unsolvedsudoku.map(row => [...row])
-        console.log("This current puzzle data is of "+getLevel+" Level with ID of "+sudokuId)
-        console.log("Unsolved Sudoku: ")
-        console.log(unsolvedSudoku)
-        console.log("Solved Sudoku: ")
-        console.log(solvedSudoku)
-        mainFunction(copyArray, unsolvedSudoku, solvedSudoku)
-    }catch (e){
-        console.error(e)
-    }finally{
-        await client.close()
-    }
-    
-}
