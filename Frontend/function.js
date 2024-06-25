@@ -83,8 +83,8 @@ function getDifficultyLevel(dbutns){
 
 async function getPuzzleDataMongo(getLevel){
     
-    apiUrl = `http://playsudokupuzzledataapi.eu-north-1.elasticbeanstalk.com/api/data/${getLevel}`
-    fetch(apiUrl)
+apiUrl = `https://sudoku-puzzle-quest-server.onrender.com/api/data/${getLevel}`
+fetch(apiUrl)
     .then(response => {
         if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -107,7 +107,6 @@ async function getPuzzleDataMongo(getLevel){
     .catch(error => {
         console.error('Error fetching puzzle data:', error);
     });
-    
 }
 
 // Solver and Backtracking Functions:
