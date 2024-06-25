@@ -3,17 +3,14 @@ const { MongoClient } = require('mongodb');
 const cors = require('cors');
 
 require('dotenv').config();
-const dbUser = process.env.DB_USER;
-const dbPass = process.env.DB_PASS;
+const mongoURI = process.env.MONGO_URI;
 const dbName = process.env.DB_NAME;
 const port = process.env.PORT || 3000;
 
 const app = express()
 app.use(cors());
 
-const uri = `mongodb+srv://${dbUser}:${dbPass}@sudoku-puzzles-db.rypn7rp.mongodb.net/?retryWrites=true&w=majority&appName=sudoku-puzzles-db`;
-
-MongoClient.connect(uri).then(client => {
+MongoClient.connect(mongoURI).then(client => {
     console.log('Connected to MongoDB');
     db = client.db(dbName);
 })
