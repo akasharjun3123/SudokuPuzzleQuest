@@ -20,7 +20,8 @@ MongoClient.connect(mongoURI).then(client => {
 
 app.use(express.json());
 
-app.get('/api/data', async (req, res) => {
+
+app.get('/getpuzzles', async (req, res) => {
     try {
         
         const data = await getAllData();
@@ -30,7 +31,7 @@ app.get('/api/data', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
-app.get('/api/data/:level', async (req, res) => {
+app.get('/getpuzzles/:level', async (req, res) => {
     try {
         const level = req.params.level.toLowerCase();
         const data = await getRandomDocument(`${level}-puzzle-collection`);
